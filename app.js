@@ -3,9 +3,11 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+const fs = require('fs');
+var bodyParser = require('body-parser')
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+
+const yaml = require('node-yaml');
 
 var app = express();
 
@@ -19,8 +21,42 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+app.use(bodyParser.urlencoded({ extended: false }))
+
+
+console.log("loading routers:")
+// if there's no defined router, we'll use the new-router to allow admin to assign a router to the route
+var fallbackRouter = require('./admin/new-route.js');
+
+var routes = yaml.readSync("./admin/routes.yaml")
+
+for (var path in routes) {
+      var routerName = '';
+
+      if (routes[path] != null) {
+        routerName = routes[path];
+      } else {
+        routerName = path.split('/')[1];
+      }
+   try {
+      if (fs.existsSync('./routes/' + routerName + '.js')) {
+        console.log(path + " → " + routerName)
+        console.log(routerName + ' router exists')
+
+        var router = require('./routes/' +  routerName);
+
+      } else {throw 'no router'}
+    } catch(err) {
+      console.log(path + " → <to be defined>")
+      console.warn(err + ': ' + routerName +  ' router doesn\'t exist')
+      router = fallbackRouter;
+    }
+  
+  app.use(path, router);
+}
+
+// admin/internal routes 
+// 🚨 I don't advise editing this 🚨
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

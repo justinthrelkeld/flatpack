@@ -1,0 +1,19 @@
+<h1>{{title}}</h1>
+<p>looks like {{title}} is a new route. Please pick a router to connect this to.</p>
+
+<form action="https://flatpack.glitch.me/routes/link" method="post">
+<input type="hidden" name="route" value="{{title}}" />
+  <ul>
+  {{# each routers}}
+  <li>{{this.name}} <button  name="router" value="{{this.name}}" type="submit">link</button></li>
+  {{/ each}}
+</ul>
+
+</form>
+
+other routes
+<ul>
+  {{# each routes}}
+  <li>{{@key}} -> {{this}}</li>
+  {{/ each}}
+</ul>
